@@ -5,7 +5,7 @@ Created at 10/23/21
 
 Pre-scan behavioral experiment for determining illusion size of each participant
 """
-from psychopy import visual, data, monitors, event, core, logging, gui
+from psychopy import visual, monitors, event, core, logging, gui
 from dd_helpers import setup_path, get_monitors
 
 import numpy as np
@@ -35,10 +35,10 @@ if not part_info.OK:
     core.quit()
 
 # check debug
-debug = part_info["debug"]
+debug = part_info.data[4]
 if not debug:
-    sub_id = int(input("Participant ID: "))
-    sub_init = input("Initials: ")
+    sub_init = part_info.data[1]
+    sub_id = part_info.data[3]
 else:
     sub_id = 0
     sub_init = 'gg'
