@@ -2,8 +2,6 @@
 """
 Helper functions for double-drift experiments
 """
-import pandas as pd
-import numpy as np
 
 
 def setup_path(sub, root, task):
