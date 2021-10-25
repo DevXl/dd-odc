@@ -46,7 +46,7 @@ else:
 # Directories and files
 EXP = "DoubleDriftODC"
 TASK = "behavioral"
-ROOTDIR = Path(__file__).resolve().parent  # find the current file
+ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
 TASKDIR = setup_path(sub_id, ROOTDIR, TASK)
 run_file = TASKDIR / f"sub-{sub_id:02d}_task-{TASK}_exp-{EXP}"
 
@@ -108,9 +108,9 @@ gabor = visual.GratingStim(
 # fixation dot
 fix = visual.Circle(
     win=exp_win,
-    radius=0.1,
-    fillColor='black',
-    size=.3,
+    radius=0.3,
+    fillColor=-1,
+    lineColor=-1,
     autoLog=False
 )
 
@@ -120,7 +120,7 @@ resp_line = visual.Line(
     start=(0, 0),
     end=(0, 1),
     lineWidth=7,
-    lineColor=[-1, -1, -1],
+    lineColor=-1,
     opacity=1,
     autoLog=False
 )
@@ -142,9 +142,9 @@ resp_stages = [resp_stages[resp_order],
                resp_stages[1 - resp_order]]  # so order 0 is [length, orientation] and order 1 is [orientation, length]
 
 instr_msg = \
-    "On each trial, maintain fixation at the center of the screen on the inner circle.\n\n" \
+    "On each trial, maintain fixation at the center of the screen on the black circle.\n\n" \
     "Pay attention to the path that the Gabor moves on.\n\n" \
-    "When the Gabor disappears, a line appears on the fixation circles.\n\n" \
+    "When the Gabor disappears, a line appears on the fixation circle.\n\n" \
     f"First, use the mouse wheel to change the {resp_stages[0]} of the line to match the {resp_stages[0]} of the " \
     f"Gabor's path.\n\n" \
     f"Press the Spacebar when you are done adjusting the {resp_stages[0]}.\n\n" \
@@ -158,7 +158,7 @@ end_msg = "Thank you for your participation :)"
 # Conditions
 speeds = [  # internal, external
     [4, 6],
-    [4, 5],  # based on Sirui's
+    [4, 5],  # based on Sirui's experiment
     [4, 3]
 ]
 quadrants = ["L", "R"]
