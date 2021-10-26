@@ -22,6 +22,8 @@ from itertools import product
 # Get the parameters from gui
 # setup
 input_gui = gui.Dlg(title=">_<")
+input_gui.addField('Debug: ', choices=True)
+
 input_gui.addText('Participant Information')
 input_gui.addField('Initials: ')
 input_gui.addField('Age: ', choices=list(range(18, 81)))
@@ -30,7 +32,10 @@ input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
 input_gui.addField('DBIC ID: ')
 input_gui.addField('Accession Number: ')
 input_gui.addFiel('Run number: ', choices=[1, 2])
-input_gui.addField('Debug: ', choices=True)
+
+input_gui.addText("Stimulus Parameters")
+input_gui.addField("Path orientation: ")
+input_gui.addField("Path length: ")
 
 # show
 part_info = input_gui.show()
@@ -131,46 +136,38 @@ right_gabor = visual.GratingStim(
 )
 
 # checkerboard
-sqr_sz = 1
+sqr_sz = 3
 n_sqrs = 8
-checkers = {
-    "left": {
-        "pat1": [],
-        "pat2": []
-    },
-    "right": {
-        "pat1": [],
-        "pat2": []
-    }
-}
+sides = ["left", "right"]
+patterns = ["pat1", "pat2"]
+oris = ["vert", "obl"]
+checkers = dict()
 
-for s in range(n_sqrs):
+for lr in sides:
+    for pat in patterns:
+        for ori in oris:
 
-    # vertical checkerboard left side pattern 1
-    vert_chk_left_pat1.append(
-        visual.Rect(
-            win=exp_win,
-            size=sqr_sz,
-            pos=[-horiz_offset, sqr_sz / 2 + s],
-            lineColor=0,
-            fillColor=1 if s % 2 else -1,
-            autoLog=False
-        )
-    )
+            checkers[lr][pat][ori] = []
 
-    # vertical checkerboard
-    left_sqr = visual.Rect(
-        win=exp_win,
-        size=sqr_sz,
-        pos=[-horiz_offset, sqr_sz / 2 + s],
-        lineColor=0,
-        fillColor=1 if s % 2 else -1,
-        autoLog=False
-    )
-vert_checker1 = visual.RadialStim(win, tex='sqrXsqr', color=-1, size=1,
-    visibleWedge=[0, 45], radialCycles=4, angularCycles=8, interpolate=False,
-    autoLog=False)  # this stim changes too much for autologging to be useful
+            for s in range(n_sqrs):
+                checkers[lr][pat][ori].append(
+                    visual.Rect(
+                        win=exp_win,
+                        size=sqr_sz,
+                        pos=[-horiz_offset if lr == "left" else horiz_offset, sqr_sz / 2 + s],
+                        lineColor=0,
+                        ori=0 if ori == "vert" else part_info.data[7],
+                        fillColor=(1 if s % 2 else -1) if pat == "pat1" else (-1 if s % 2 else 1),
+                        autoLog=False
+                    )
+                )
 
+# cue
+cue = visual.ImageStim(
+    win=exp_win,
+    image='arrow.png',
+    autoLog=False
+)
 
 # fixation dot
 fix = visual.Circle(
@@ -192,11 +189,6 @@ rep_stim = visual.TextStim(win=exp_win, wrapWidth=30, height=.8, pos=[0, -5], au
 # =========================================================================== #
 
 # Instructions
-resp_stages = ['Length', 'Orientation']  # reporting stages
-resp_order = np.random.rand() < .5
-resp_stages = [resp_stages[resp_order],
-               resp_stages[1 - resp_order]]  # so order 0 is [length, orientation] and order 1 is [orientation, length]
-
 instr_msg = \
     "On each trial, maintain fixation at the center of the screen on the inner circle.\n\n" \
     "Pay attention to the path that the Gabor moves on.\n\n" \
