@@ -26,7 +26,7 @@ input_gui.addText('Participant Information')
 input_gui.addField('Initials: ')
 input_gui.addField('Age: ', choices=list(range(18, 81)))
 input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
-input_gui.addField('Participant ID: ', choices=list(range(1, 25)))
+input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
 input_gui.addField('Debug: ', choices=[True, False])
 
 # show
@@ -40,15 +40,16 @@ if not debug:
     sub_init = part_info.data[1]
     sub_id = part_info.data[3]
 else:
-    sub_id = 0
     sub_init = 'gg'
+    sub_id = 0
 
 # Directories and files
 EXP = "DoubleDriftODC"
-TASK = "behavioral"
+PART = "fmri"
+TASK = "IllusionSize"
 ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
-TASKDIR = setup_path(sub_id, ROOTDIR, TASK)
-run_file = TASKDIR / f"sub-{sub_id:02d}_task-{TASK}_exp-{EXP}"
+PARTDIR = setup_path(sub_id, ROOTDIR, PART)
+run_file = PARTDIR / f"sub-{sub_id:02d}_task-{TASK}_part-{PART}_exp-{EXP}"
 
 # file names
 exp_file = str(run_file)
