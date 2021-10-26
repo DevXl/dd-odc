@@ -4,7 +4,7 @@ Helper functions for double-drift experiments
 """
 
 
-def setup_path(sub, root, task):
+def setup_path(sub, root, exp_part):
     """
     Sets up paths and directories for experiment
     The structure loosely follows BIDS convention
@@ -14,7 +14,7 @@ def setup_path(sub, root, task):
     sub : int
     root : Pathlib object
         points to the root directory of the experiment
-    task : str
+    exp_part : str
     """
     # data directory
     data_dir = root / "data"
@@ -30,7 +30,7 @@ def setup_path(sub, root, task):
         sub_dir.mkdir()
 
     # task directory
-    task_dir = sub_dir / task
+    task_dir = sub_dir / exp_part
     if not task_dir.exists():
         print("Making the task directory...")
         task_dir.mkdir()
