@@ -24,7 +24,7 @@ from itertools import product
 input_gui = gui.Dlg(title=">_<")
 input_gui.addField('Debug: ', choices=True)
 
-input_gui.addText('Participant Information')
+input_gui.addText('Participant Information', color='blue')
 input_gui.addField('Initials: ')
 input_gui.addField('Age: ', choices=list(range(18, 81)))
 input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
@@ -33,7 +33,7 @@ input_gui.addField('DBIC ID: ')
 input_gui.addField('Accession Number: ')
 input_gui.addFiel('Run number: ', choices=[1, 2])
 
-input_gui.addText("Stimulus Parameters")
+input_gui.addText("Stimulus Parameters", color='blue')
 input_gui.addField("Path orientation: ")
 input_gui.addField("Path length: ")
 
@@ -53,7 +53,7 @@ else:
 
 # Directories and files
 EXP = "DoubleDriftODC"
-PART = "behavioral"
+PART = "fmri"
 TASK = "ContrastChange"
 ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
 PARTDIR = setup_path(sub_id, ROOTDIR, PART)
@@ -191,24 +191,15 @@ rep_stim = visual.TextStim(win=exp_win, wrapWidth=30, height=.8, pos=[0, -5], au
 # Instructions
 instr_msg = \
     "On each trial, maintain fixation at the center of the screen on the inner circle.\n\n" \
-    "Pay attention to the path that the Gabor moves on.\n\n" \
-    "When the Gabor disappears, a line appears on the fixation circles.\n\n" \
-    f"First, use the mouse wheel to change the {resp_stages[0]} of the line to match the {resp_stages[0]} of the " \
-    f"Gabor's path.\n\n" \
-    f"Press the Spacebar when you are done adjusting the {resp_stages[0]}.\n\n" \
-    f"Then, use the mouse wheel to change the {resp_stages[1]} of the line to match the {resp_stages[1]} of the " \
-    f"Gabor's path.\n\n" \
-    "Again, press the Spacebar to submit your report and move on to the next trial.\n\n" \
-    "Press the spacebar to start the experiment..."
+    "A red arrow will appear at fixation that indicates which side of the screen you should pay attention to.\n\n" \
+    "When the arrow disappears, maintain fixation and just pay attention to the moving Gabor cued side and ignore " \
+    "the other side of the screen.\n\n" \
+    "If the gabor on the cued side dims or brightens, press the response key!\n\n"\
+    "Press the response key to start the experiment..."
 
 end_msg = "Thank you for your participation :)"
 
 # Conditions
-speeds = [  # internal, external
-    [4, 6],
-    [4, 5],  # based on Sirui's
-    [4, 3]
-]
 quadrants = ["L", "R"]
 n_trials_per_cond = 15
 
