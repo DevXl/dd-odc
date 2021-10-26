@@ -45,7 +45,7 @@ else:
 
 # Directories and files
 EXP = "DoubleDriftODC"
-PART = "fmri"
+PART = "psychophysics"
 TASK = "IllusionSize"
 ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
 PARTDIR = setup_path(sub_id, ROOTDIR, PART)
