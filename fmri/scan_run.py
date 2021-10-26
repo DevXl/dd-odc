@@ -26,8 +26,11 @@ input_gui.addText('Participant Information')
 input_gui.addField('Initials: ')
 input_gui.addField('Age: ', choices=list(range(18, 81)))
 input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
-input_gui.addField('Participant ID: ', choices=list(range(1, 25)))
-input_gui.addField('Debug: ', choices=[True, False])
+input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
+input_gui.addField('DBIC ID: ')
+input_gui.addField('Accession Number: ')
+input_gui.addFiel('Run number: ', choices=[1, 2])
+input_gui.addField('Debug: ', choices=True)
 
 # show
 part_info = input_gui.show()
@@ -37,18 +40,19 @@ if not part_info.OK:
 # check debug
 debug = part_info["debug"]
 if not debug:
-    sub_id = int(input("Participant ID: "))
-    sub_init = input("Initials: ")
+    sub_init = part_info.data[1]
+    sub_id = part_info.data[3]
 else:
-    sub_id = 0
     sub_init = 'gg'
+    sub_id = 0
 
 # Directories and files
 EXP = "DoubleDriftODC"
-TASK = "behavioral"
-ROOTDIR = Path(__file__).resolve().parent  # find the current file
-TASKDIR = setup_path(sub_id, ROOTDIR, TASK)
-run_file = TASKDIR / f"sub-{sub_id:02d}_task-{TASK}_exp-{EXP}"
+PART = "behavioral"
+TASK = "ContrastChange"
+ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
+PARTDIR = setup_path(sub_id, ROOTDIR, PART)
+run_file = PARTDIR / f"sub-{sub_id:02d}_task-{TASK}_part-{PART}_exp-{EXP}"
 
 # file names
 exp_file = str(run_file)
@@ -90,6 +94,15 @@ logging.setDefaultClock(log_clock)
 log_data = logging.LogFile(log_file, filemode='w', level=logging.INFO)
 logging.console.setLevel(logging.ERROR)
 
+# Add a new logging level name called bids
+# we will use this level to log information that will be saved
+# in the _events.tsv file for this run
+BIDS = 69
+logging.addLevel(BIDS, 'BIDS')
+
+# BIDS TEMPLATE
+logging.root.log("onset\tduration\tstim_type\tstim_fn\trepetition", level=BIDS)
+template_bids = '{onset:.3f}\t{duration:.3f}\t{task_side}\t{eye}'
 
 # =========================================================================== #
 # --------------------------------------------------------------------------- #
@@ -98,13 +111,66 @@ logging.console.setLevel(logging.ERROR)
 # =========================================================================== #
 
 # gabor
-gabor = visual.GratingStim(
+horiz_offset = 7
+left_gabor = visual.GratingStim(
     win=exp_win,
     mask='gauss',
+    pos=[-horiz_offset, 0],
     contrast=1,
     interpolate=False,
     autoLog=False
 )
+
+right_gabor = visual.GratingStim(
+    win=exp_win,
+    mask='gauss',
+    pos=[horiz_offset, 0],
+    contrast=1,
+    interpolate=False,
+    autoLog=False
+)
+
+# checkerboard
+sqr_sz = 1
+n_sqrs = 8
+checkers = {
+    "left": {
+        "pat1": [],
+        "pat2": []
+    },
+    "right": {
+        "pat1": [],
+        "pat2": []
+    }
+}
+
+for s in range(n_sqrs):
+
+    # vertical checkerboard left side pattern 1
+    vert_chk_left_pat1.append(
+        visual.Rect(
+            win=exp_win,
+            size=sqr_sz,
+            pos=[-horiz_offset, sqr_sz / 2 + s],
+            lineColor=0,
+            fillColor=1 if s % 2 else -1,
+            autoLog=False
+        )
+    )
+
+    # vertical checkerboard
+    left_sqr = visual.Rect(
+        win=exp_win,
+        size=sqr_sz,
+        pos=[-horiz_offset, sqr_sz / 2 + s],
+        lineColor=0,
+        fillColor=1 if s % 2 else -1,
+        autoLog=False
+    )
+vert_checker1 = visual.RadialStim(win, tex='sqrXsqr', color=-1, size=1,
+    visibleWedge=[0, 45], radialCycles=4, angularCycles=8, interpolate=False,
+    autoLog=False)  # this stim changes too much for autologging to be useful
+
 
 # fixation dot
 fix = visual.Circle(
@@ -112,17 +178,6 @@ fix = visual.Circle(
     radius=0.1,
     fillColor='black',
     size=.3,
-    autoLog=False
-)
-
-# Response line
-resp_line = visual.Line(
-    win=exp_win,
-    start=(0, 0),
-    end=(0, 1),
-    lineWidth=7,
-    lineColor=[-1, -1, -1],
-    opacity=1,
     autoLog=False
 )
 
