@@ -19,8 +19,9 @@ if len(sys.argv) > 1:
 ROOTDIR = Path(__file__).resolve().parent.parent
 DATADIR = ROOTDIR / "data"
 EXP = "DoubleDriftODC"
-TASK = "behavioral"
-data_file = DATADIR / f"sub-{sub_id}" / "behavioral" / f"sub-{sub_id}_task-{TASK}_exp-{EXP}.csv"
+PART = "behavioral"
+TASK = "IllusionSize"
+data_file = DATADIR / f"sub-{sub_id}" / PART / f"sub-{sub_id}_task-{TASK}_part-{PART}_exp-{EXP}.csv"
 
 # Load the file
 df = pd.read_csv(data_file)
