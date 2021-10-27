@@ -31,11 +31,12 @@ input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
 input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
 input_gui.addField('DBIC ID: ')
 input_gui.addField('Accession Number: ')
-input_gui.addFiel('Run number: ', choices=[1, 2])
+input_gui.addFiel('Run: ', choices=[1, 2])
 
-input_gui.addText("Stimulus Parameters", color='blue')
+input_gui.addText("Experiment Parameters", color='blue')
 input_gui.addField("Path orientation: ")
 input_gui.addField("Path length: ")
+input_gui.addField("Eye:", choices=["Left", "Right"])
 
 # show
 part_info = input_gui.show()
@@ -107,7 +108,7 @@ logging.addLevel(BIDS, 'BIDS')
 
 # BIDS TEMPLATE
 logging.root.log("onset\tduration\ttask_side\teye", level=BIDS)
-template_bids = '{onset:.3f}\t{duration:.3f}\t{task_side}\t{eye}'
+template_bids = '{onset:.3f}\t{duration:.3f}\t{hemifield}\t{eye}'
 
 # =========================================================================== #
 # --------------------------------------------------------------------------- #
@@ -135,11 +136,10 @@ right_gabor = visual.GratingStim(
     autoLog=False
 )
 
-# checkerboard
+# checkerboards
 sqr_sz = 3
 n_sqrs = 8
 stim_sides = ["left", "right"]
-eyes = ["left", "right"]
 patterns = ["pat1", "pat2"]
 oris = ["vert", "obl"]
 checkers = dict()
@@ -192,40 +192,48 @@ rep_stim = visual.TextStim(win=exp_win, wrapWidth=30, height=.8, pos=[0, -5], au
 # Instructions
 instr_msg = \
     "On each trial, maintain fixation at the center of the screen on the inner circle.\n\n" \
-    "A red arrow will appear at fixation that indicates which side of the screen you should pay attention to.\n\n" \
-    "When the arrow disappears, maintain fixation and just pay attention to the moving Gabor cued side and ignore " \
+    "A red arrow will appear at fixation that indicates which side of the screen you should pay attention to for all " \
+    "the subsequent trials.\n\n" \
+    "When the arrow disappears, maintain fixation and pay attention to the moving Gabor on the cued side and ignore " \
     "the other side of the screen.\n\n" \
-    "If the gabor on the cued side dims or brightens, press the response key!\n\n"\
-    "Press the response key to start the experiment..."
+    "If the gabor on the cued side becomes dimmer, press the response button!\n\n"\
+    "Press the response button to start the experiment..."
 
 end_msg = "Thank you for your participation :)"
 
 # Conditions
-quadrants = ["L", "R"]
-n_trials_per_cond = 15
+hemifield = ["L", "R"]
+conditions = ["double_drift"]
+n_blocks = 15
+n_runs = 10
 
 # Data handler
 # columns of experiment dataframe
 cols = [
-    "RESP_ORDER",
-    "V_INTERNAL",
-    "V_EXTERNAL",
-    "QUADRANT",
-    "RESP_ORI",
-    "RESP_LENGTH",
+    "HEMIFIELD",
+    "CONDITION",
+    "DIM",
+    "t_DIM",
+    "PATH_LEN",
+    "PATH_ORI",
     "TRIAL",
+    "BLOCK",
+    "RUN",
+    "EYE",
     "TASK",
     "EXPERIMENT",
-    "SUBJECT_ID",
-    "SUB_INITIALS"
+    "SUB_ID",
+    "SUB_INITIALS",
+    "DBIC_ID",
+    "ACCESSION"
 ]
 
 # blocks and trials
-exp_blocks = None  # actual dataframe
+exp_runs = None  # actual dataframe
 
 # in the speed block, speeds are varied. In the duration block, durations are varied.
-conds = list(product(speeds, quadrants))
-n_trials = n_trials_per_cond * len(conds)  # total number of trials in the blocks
+conds = list(product(hemifield, conditions))
+n_trials = n_runs * n_blocks * len(conds)  # total number of trials in the blocks
 
 # loop through conditions, make every permutation, and save it to a numpy array
 rows = None
