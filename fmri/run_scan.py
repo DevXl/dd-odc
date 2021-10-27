@@ -106,7 +106,7 @@ BIDS = 69
 logging.addLevel(BIDS, 'BIDS')
 
 # BIDS TEMPLATE
-logging.root.log("onset\tduration\tstim_type\tstim_fn\trepetition", level=BIDS)
+logging.root.log("onset\tduration\ttask_side\teye", level=BIDS)
 template_bids = '{onset:.3f}\t{duration:.3f}\t{task_side}\t{eye}'
 
 # =========================================================================== #
@@ -138,12 +138,13 @@ right_gabor = visual.GratingStim(
 # checkerboard
 sqr_sz = 3
 n_sqrs = 8
-sides = ["left", "right"]
+stim_sides = ["left", "right"]
+eyes = ["left", "right"]
 patterns = ["pat1", "pat2"]
 oris = ["vert", "obl"]
 checkers = dict()
 
-for lr in sides:
+for lr in stim_sides:
     for pat in patterns:
         for ori in oris:
 
