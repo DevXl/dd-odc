@@ -66,8 +66,8 @@ def get_monitors(mon_name):
         },
         "projector": {
             "size_cm": (54, 30),
-            "size_px": (1280, 960),
-            "dist": 124,
+            "size_px": (1280, 768),
+            "dist": 124.5,
             "refresh_rate": 60
         }
     }
