@@ -5,13 +5,14 @@ Created at 10/23/21
 
 fMRI experiment for finding the location of attentional feedback in V1
 """
-from psychopy import visual, monitors, event, core, logging, gui
+from psychopy import visual, monitors, event, core, logging, gui, data
 from mr_helpers import setup_path, get_monitors
 
 import numpy as np
 from pathlib import Path
 import pandas as pd
 from itertools import product
+from collections import defaultdict
 
 # =========================================================================== #
 # --------------------------------------------------------------------------- #
@@ -22,32 +23,34 @@ from itertools import product
 # Get the parameters from gui
 # setup
 input_gui = gui.Dlg(title=">_<")
-input_gui.addField('Debug: ', choices=True)
+input_gui.addField('Debug: ', True, color='red')
 
 input_gui.addText('Participant Information', color='blue')
-input_gui.addField('Initials: ')
-input_gui.addField('Age: ', choices=list(range(18, 81)))
-input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
 input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
+input_gui.addField('Initials: ')
 input_gui.addField('DBIC ID: ')
 input_gui.addField('Accession Number: ')
-input_gui.addFiel('Run: ', choices=[1, 2])
+input_gui.addField('Run: ', choices=[1, 2])
+input_gui.addField('Age: ', choices=list(range(18, 81)))
+input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
 
 input_gui.addText("Experiment Parameters", color='blue')
-input_gui.addField("Path orientation: ")
+input_gui.addField("Path orientation: ", 10)
 input_gui.addField("Path length: ")
-input_gui.addField("Eye:", choices=["Left", "Right"])
+input_gui.addField("Initial Eye:", choices=["Left", "Right"])
+input_gui.addFixedField("Date: ", data.getDateStr())
 
 # show
 part_info = input_gui.show()
-if not part_info.OK:
+if not input_gui.OK:
     core.quit()
-
+else:
+    print(part_info)
 # check debug
-debug = part_info["debug"]
+debug = part_info[0]
 if not debug:
-    sub_init = part_info.data[1]
-    sub_id = part_info.data[3]
+    sub_id = int(part_info[1])
+    sub_init = part_info[2]
 else:
     sub_init = 'gg'
     sub_id = 0
@@ -55,7 +58,7 @@ else:
 # Directories and files
 EXP = "DoubleDriftODC"
 PART = "fmri"
-TASK = "ContrastChange"
+TASK = "contrast_change"
 ROOTDIR = Path(__file__).resolve().parent.parent  # find the current file
 PARTDIR = setup_path(sub_id, ROOTDIR, PART)
 run_file = PARTDIR / f"sub-{sub_id:02d}_task-{TASK}_part-{PART}_exp-{EXP}"
@@ -66,7 +69,7 @@ frames_file = str(run_file) + "_frame-intervals.log"
 log_file = str(run_file) + "_runtime-log.log"
 
 # Monitor
-mon_name = 'Asus'
+mon_name = 'RaZer'
 mon_specs = get_monitors(mon_name)
 exp_mon = monitors.Monitor(name=mon_name, width=mon_specs["size_cm"][0], distance=mon_specs["dist"])
 exp_mon.setSizePix(mon_specs["size_px"])
@@ -142,23 +145,20 @@ n_sqrs = 8
 stim_sides = ["left", "right"]
 patterns = ["pat1", "pat2"]
 oris = ["vert", "obl"]
-checkers = dict()
+checkers = defaultdict(list)
 
 for lr in stim_sides:
     for pat in patterns:
         for ori in oris:
-
-            checkers[lr][pat][ori] = []
-
             for s in range(n_sqrs):
-                checkers[lr][pat][ori].append(
+                checkers[f"{lr}_{pat}_{ori}"].append(
                     visual.Rect(
                         win=exp_win,
                         size=sqr_sz,
                         pos=[-horiz_offset if lr == "left" else horiz_offset, sqr_sz / 2 + s],
                         lineColor=0,
-                        ori=0 if ori == "vert" else part_info.data[7],
-                        fillColor=(1 if s % 2 else -1) if pat == "pat1" else (-1 if s % 2 else 1),
+                        ori=0 if (ori == "vert") else int(part_info[8]),
+                        fillColor=(1 if s % 2 else -1) if (pat == "pat1") else (-1 if s % 2 else 1),
                         autoLog=False
                     )
                 )
@@ -202,59 +202,72 @@ instr_msg = \
 end_msg = "Thank you for your participation :)"
 
 # Conditions
-hemifield = ["L", "R"]
-conditions = ["double_drift"]
-n_blocks = 15
-n_runs = 10
+hemifields = ["L", "R"]  # target left or right side of the fixation
+# trial_types = ["dd", "ctrl_vert", "ctrl_oblq"]  # is it a double- or single-drift
+trial_types = ["dd"]
+eyes = ["L", "R"]  # left eye viewing or right eye: first 5 runs are one eye and the last 5 are the other
+n_trials_per_cond = 4  # how many of each condition
+n_blocks = 8  # each block has 11 sec of stimulus presentation followed by 15 sec fixation
+n_runs = 10  # number of runs
 
 # Data handler
 # columns of experiment dataframe
 cols = [
     "HEMIFIELD",
-    "CONDITION",
+    "TRIAL_TYPE",
     "DIM",
-    "t_DIM",
-    "PATH_LEN",
-    "PATH_ORI",
+    "DIM_TIME",
     "TRIAL",
+    "EYE",
     "BLOCK",
     "RUN",
-    "EYE",
+    "PATH_LEN",
+    "PATH_ORI",
     "TASK",
     "EXPERIMENT",
     "SUB_ID",
     "SUB_INITIALS",
     "DBIC_ID",
-    "ACCESSION"
+    "ACCESSION_NUM"
 ]
 
 # blocks and trials
 exp_runs = None  # actual dataframe
 
 # in the speed block, speeds are varied. In the duration block, durations are varied.
-conds = list(product(hemifield, conditions))
+conds = list(product(hemifields, trial_types, eyes))
 n_trials = n_runs * n_blocks * len(conds)  # total number of trials in the blocks
 
 # loop through conditions, make every permutation, and save it to a numpy array
 rows = None
-for cond in list(conds):
+for hemi, trial_type, eye in conds:
     row = np.array([
-        int(resp_order),
-        cond[0][0],  # internal speed
-        cond[0][1],  # external speed
-        cond[1],  # quadrant
-        np.NaN,  # reported orientation
-        np.NaN,  # reported length
+        hemi,  # cued hemifield
+        trial_type,  # vertical control, oblique control, or dd
+        np.NaN,  # does the target dim
+        np.NaN,  # time of dimming
         np.NaN,  # trial
+        eye,  # eye
+        np.NaN,  # block
+        np.NaN,  # run
+        np.NaN,  # path length
+        np.NaN,  # path orientation
         TASK,  # task
         EXP,  # experiment
         sub_id,  # subject ID
-        sub_init,  # subject's initials
+        sub_init,  # subject initials
+        part_info[3],  # DBIC ID
+        part_info[4]  # Accession Number
     ])
     if rows is None:
         rows = row
     else:
         rows = np.vstack((rows, row))
+
+print(rows)
+
+for run in range(1, n_runs + 1):
+    for block in range(n_blocks):
 
 # repeat conditions for however many trials
 this_block = np.repeat(rows, n_trials_per_cond, axis=0)
