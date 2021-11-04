@@ -206,9 +206,9 @@ hemifields = ["L", "R"]  # target left or right side of the fixation
 # trial_types = ["dd", "ctrl_vert", "ctrl_oblq"]  # is it a double- or single-drift
 trial_types = ["dd"]
 eyes = ["L", "R"]  # left eye viewing or right eye: first 5 runs are one eye and the last 5 are the other
-n_trials_per_cond = 4  # how many of each condition
-n_blocks = 8  # each block has 11 sec of stimulus presentation followed by 15 sec fixation
-n_runs = 10  # number of runs
+block_parts = ["wait", "fixation", "stim"]
+n_blocks = 15  # each block has an initial 4s wait period followed by 11s of stimulus presentation and 15s fixation
+n_runs = 12  # number of runs
 
 # Data handler
 # columns of experiment dataframe
@@ -235,7 +235,7 @@ cols = [
 exp_runs = None  # actual dataframe
 
 # in the speed block, speeds are varied. In the duration block, durations are varied.
-conds = list(product(hemifields, trial_types, eyes))
+conds = list(product(trial_types, eyes, hemifields))
 n_trials = n_runs * n_blocks * len(conds)  # total number of trials in the blocks
 
 # loop through conditions, make every permutation, and save it to a numpy array
@@ -266,8 +266,8 @@ for hemi, trial_type, eye in conds:
 
 print(rows)
 
-for run in range(1, n_runs + 1):
-    for block in range(n_blocks):
+# for run in range(1, n_runs + 1):
+#     for block in range(n_blocks):
 
 # repeat conditions for however many trials
 this_block = np.repeat(rows, n_trials_per_cond, axis=0)
