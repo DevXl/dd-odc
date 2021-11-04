@@ -30,7 +30,7 @@ input_gui.addField('Participant Number: ', choices=list(range(1, 25)))
 input_gui.addField('Initials: ')
 input_gui.addField('DBIC ID: ')
 input_gui.addField('Accession Number: ')
-input_gui.addField('Run: ', choices=[1, 2])
+input_gui.addField('Session: ', choices=[1, 2])
 input_gui.addField('Age: ', choices=list(range(18, 81)))
 input_gui.addField('Vision: ', choices=["Normal", "Corrected", "Other"])
 
@@ -54,6 +54,9 @@ if not debug:
 else:
     sub_init = 'gg'
     sub_id = 0
+
+init_eye = part_info[10]
+date = part_info[11]
 
 # Directories and files
 EXP = "DoubleDriftODC"
@@ -207,7 +210,7 @@ hemifields = ["L", "R"]  # target left or right side of the fixation
 trial_types = ["dd"]
 eyes = ["L", "R"]  # left eye viewing or right eye: first 5 runs are one eye and the last 5 are the other
 block_parts = ["wait", "fixation", "stim"]
-n_blocks = 15  # each block has an initial 4s wait period followed by 11s of stimulus presentation and 15s fixation
+n_blocks = 10  # each block has an initial 4s wait period followed by 11s of stimulus presentation and 15s fixation
 n_runs = 12  # number of runs
 
 # Data handler
@@ -239,6 +242,15 @@ conds = list(product(trial_types, eyes, hemifields))
 n_trials = n_runs * n_blocks * len(conds)  # total number of trials in the blocks
 
 # loop through conditions, make every permutation, and save it to a numpy array
+for run in range(n_runs):
+    run_eye = ("L" if run < n_runs / 2 else "R") if init_eye == "L" else ("R" if run < n_runs / 2 else "L")
+    rand_blocks = np.ones(n_blocks)
+    rand_blocks[:n_blocks//2] = 0
+    np.random.shuffle(rand_blocks)
+
+    for block in range(n_blocks):
+        block_side = np.random.choice(hemifields)
+
 rows = None
 for hemi, trial_type, eye in conds:
     row = np.array([
@@ -265,9 +277,6 @@ for hemi, trial_type, eye in conds:
         rows = np.vstack((rows, row))
 
 print(rows)
-
-# for run in range(1, n_runs + 1):
-#     for block in range(n_blocks):
 
 # repeat conditions for however many trials
 this_block = np.repeat(rows, n_trials_per_cond, axis=0)
