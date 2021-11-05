@@ -209,9 +209,10 @@ hemifields = ["L", "R"]  # target left or right side of the fixation
 # trial_types = ["dd", "ctrl_vert", "ctrl_oblq"]  # is it a double- or single-drift
 trial_types = ["dd"]
 eyes = ["L", "R"]  # left eye viewing or right eye: first 5 runs are one eye and the last 5 are the other
-block_parts = ["wait", "fixation", "stim"]
-n_blocks = 10  # each block has an initial 4s wait period followed by 11s of stimulus presentation and 15s fixation
-n_runs = 12  # number of runs
+block_parts = ["cue", "fix", "stim"]
+n_blocks = 12  # each block has an initial 4s wait period followed by 11s of stimulus presentation and 15s fixation
+n_runs = 8  # number of runs
+run_per_cond = 2
 
 # Data handler
 # columns of experiment dataframe
@@ -242,14 +243,51 @@ conds = list(product(trial_types, eyes, hemifields))
 n_trials = n_runs * n_blocks * len(conds)  # total number of trials in the blocks
 
 # loop through conditions, make every permutation, and save it to a numpy array
-for run in range(n_runs):
-    run_eye = ("L" if run < n_runs / 2 else "R") if init_eye == "L" else ("R" if run < n_runs / 2 else "L")
-    rand_blocks = np.ones(n_blocks)
-    rand_blocks[:n_blocks//2] = 0
-    np.random.shuffle(rand_blocks)
+run_cnt = 0
+for eye in eyes:
+    for hemi in hemifields:
+        for run in range(run_per_cond):
+            for block in range(n_blocks):
+                for trial_type in block_parts:
+                    row = np.array([
+                        eye,
+                        hemi,  # target hemifield
+                        run + 1,
+                        block + 1,
+                        trial_type,  # cue, stim, or fixation
+                        np.NaN,  # does the target dim
+                        np.NaN,  # time of dimming
+                        np.NaN,  # trial
+                        np.NaN,  # block
+                        np.NaN,  # run
+                        np.NaN,  # path length
+                        np.NaN,  # path orientation
+                        TASK,  # task
+                        EXP,  # experiment
+                        sub_id,  # subject ID
+                        sub_init,  # subject initials
+                        part_info[3],  # DBIC ID
+                        part_info[4]  # Accession Number
+                    ])
 
-    for block in range(n_blocks):
-        block_side = np.random.choice(hemifields)
+                    # if trial_type == 'fix':
+
+# for run in range(n_runs):
+#
+#     # select the initial eye for the first half of trials and the other eye for the other half
+#     run_eye = ("L" if run < n_runs / 2 else "R") if init_eye == "L" else ("R" if run < n_runs / 2 else "L")
+#
+#     # randomize block
+#     run_hemi = "L" if run in
+#     rand_blocks = np.ones(n_blocks)
+#     rand_blocks[:n_blocks // 2] = 0
+#     np.random.shuffle(rand_blocks)
+#
+#     for block in range(n_blocks):
+#
+#         # select the random hemifield for this block
+#         block_side = hemifields[rand_blocks]
+
 
 rows = None
 for hemi, trial_type, eye in conds:
@@ -276,11 +314,10 @@ for hemi, trial_type, eye in conds:
     else:
         rows = np.vstack((rows, row))
 
-print(rows)
-
 # repeat conditions for however many trials
-this_block = np.repeat(rows, n_trials_per_cond, axis=0)
+this_block = np.repeat(rows, run_per_cond, axis=0)
 
+print(this_block)
 # shuffle them
 np.random.shuffle(this_block)  # this preserves the order within row and just shuffles the rows
 
